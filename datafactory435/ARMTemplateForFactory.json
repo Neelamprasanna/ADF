@@ -15,9 +15,25 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
 		},
+		"AzureSqlDatabase1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSqlDatabase1'"
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageacc7383.dfs.core.windows.net/"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlserver096.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "db1"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "prasanna"
 		}
 	},
 	"variables": {
@@ -260,6 +276,329 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy file details from Blob to Azure Database Table",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DelimitedText11",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureSqlTable2",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DelimitedText11')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline4')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Create Pipeline to load valid and invalid sales records",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow2",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"valid": {},
+									"invalid": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "EmployeeName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Gender",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Location",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Designation",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Salary",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee_Details"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "EmployeeName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Gender",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Location",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Designation",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Salary",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employees"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "date"
+					},
+					{
+						"name": "Salesman",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Item",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Units",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Unit_price",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "Sale_amt",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Sales_details"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "date"
+					},
+					{
+						"name": "Salesman",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Item",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Units",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Unit_price",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "Sale_amt",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "ErrorReason",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Sales_details_fail"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -373,6 +712,110 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText11')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "source3"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "EmployeeName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Location",
+						"type": "String"
+					},
+					{
+						"name": "Designation",
+						"type": "String"
+					},
+					{
+						"name": "Salary",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText12')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "source4"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "String"
+					},
+					{
+						"name": "SalesMan",
+						"type": "String"
+					},
+					{
+						"name": "Item",
+						"type": "String"
+					},
+					{
+						"name": "Units",
+						"type": "String"
+					},
+					{
+						"name": "Unit_price",
+						"type": "String"
+					},
+					{
+						"name": "Sale_amt",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
 			]
 		},
 		{
@@ -807,6 +1250,28 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDatabase1_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AzureSqlDatabase1_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('AzureSqlDatabase1_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -912,6 +1377,107 @@
 				"[concat(variables('factoryId'), '/datasets/DelimitedText8')]",
 				"[concat(variables('factoryId'), '/datasets/DelimitedText9')]",
 				"[concat(variables('factoryId'), '/datasets/DelimitedText10')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText12",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable3",
+								"type": "DatasetReference"
+							},
+							"name": "valid"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable4",
+								"type": "DatasetReference"
+							},
+							"name": "invalid"
+						}
+					],
+					"transformations": [
+						{
+							"name": "split1"
+						},
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesDate as date,",
+						"          SalesMan as string,",
+						"          Item as string,",
+						"          Units as integer,",
+						"          Unit_price as double,",
+						"          Sale_amt as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 split(Units > 0 && toDecimal(Unit_price) >= 0.0 && toDecimal(Sale_amt) >= 0.0 &&!isNull(SalesMan) &&!isNull(SalesDate) &&!isNull(Item),",
+						"     disjoint: false) ~> split1@(stream1, stream)",
+						"split1@stream1 derive(error = iif(Units <= 0, 'Invalid Units',   iif(Unit_price < 0, 'Negative Price',     iif(isNull(SalesMan), 'Missing SalesMan',       iif(isNull(SalesDate), 'Missing SalesDate',         iif(isNull(Item), 'Missing Item', 'Unknown Error')))))) ~> derivedColumn1",
+						"split1@stream1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          SalesDate as date,",
+						"          Salesman as string,",
+						"          Item as string,",
+						"          Units as integer,",
+						"          Unit_price as decimal(10,2),",
+						"          Sale_amt as decimal(10,2)",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> valid",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          SalesDate as date,",
+						"          Salesman as string,",
+						"          Item as string,",
+						"          Units as integer,",
+						"          Unit_price as decimal(10,2),",
+						"          Sale_amt as decimal(10,2),",
+						"          ErrorReason as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> invalid"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DelimitedText12')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable3')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable4')]"
 			]
 		}
 	]
