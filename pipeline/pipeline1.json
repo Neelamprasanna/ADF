@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy data1",
+				"name": "copy data from azure blob to azure data lake",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -90,7 +90,7 @@
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "Copy data1",
+						"activity": "copy data from azure blob to azure data lake",
 						"dependencyConditions": [
 							"Succeeded"
 						]
