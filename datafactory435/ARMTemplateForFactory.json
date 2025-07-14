@@ -183,7 +183,7 @@
 						"type": "SetVariable",
 						"dependsOn": [
 							{
-								"activity": "Data flow1",
+								"activity": "Data flow from blob to multiple folders in datalake",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -203,7 +203,7 @@
 						}
 					},
 					{
-						"name": "Data flow1",
+						"name": "Data flow from blob to multiple folders in datalake",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
